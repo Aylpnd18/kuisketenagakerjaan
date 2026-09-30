@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Wants to Be a Millionaire - Ekonomi Ketenagakerjaan Kelas 11</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Great+Vibes&family=Montserrat:wght@400;600;700;800;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at center, #0e1238 0%, #030511 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Millionaire Hexagon & Frame Styling */
+        .millionaire-box {
+            background: linear-gradient(180deg, #091540 0%, #020826 100%);
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), inset 0 0 10px rgba(59, 130, 246, 0.3);
+            position: relative;
+            clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);
+            transition: all 0.3s ease;
+        }
+
+        .millionaire-box:hover:not(.disabled):not(.locked) {
+            background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+            border-color: #fbbf24;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.8);
+            cursor: pointer;
+        }
+
+        /* Question and Option states */
+        .millionaire-box.selected {
+            background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.9) !important;
+            animation: pulse-orange 0.8s infinite alternate;
+        }
+
+        .millionaire-box.correct {
+            background: linear-gradient(180deg, #15803d 0%, #166534 100%) !important;
+            border-color: #4ade80 !important;
+            box-shadow: 0 0 30px rgba(74, 222, 128, 1) !important;
+            animation: blink-green 0.4s 3;
+        }
+
+        .millionaire-box.wrong {
+            background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%) !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 30px rgba(248, 113, 113, 1) !important;
+        }
+
+        .millionaire-box.disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Connector Lines */
+        .connector-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+        }
+
+        /* Keyframe Animations */
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.6); }
+            100% { box-shadow: 0 0 30px rgba(245, 158, 11, 1); }
+        }
+
+        @keyframes blink-green {
+            0%, 100% { background: linear-gradient(180deg, #15803d 0%, #166534 100%); }
+            50% { background: linear-gradient(180deg, #22c55e 0%, #15803d 100%); }
+        }
+
+        /* Ladder styling */
+        .ladder-item {
+            transition: all 0.2s ease;
+        }
+        .ladder-item.active {
+            background-color: #d97706;
+            color: #ffffff;
+            font-weight: bold;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #f59e0b;
+        }
+        .ladder-item.safe {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        .ladder-item.passed {
+            color: #10b981;
+        }
+
+        /* Lifeline Buttons */
+        .lifeline-btn {
+            width: 50px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #3b82f6;
+            background: radial-gradient(circle, #1e3a8a 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+        }
+        .lifeline-btn:hover:not(.used) {
+            transform: scale(1.1);
+            border-color: #fbbf24;
+            box-shadow: 0 0 15px #fbbf24;
+        }
+        .lifeline-btn.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            position: relative;
+        }
+        .lifeline-btn.used::after {
+            content: '✕';
+            color: #ef4444;
+            font-size: 22px;
+            font-weight: bold;
+            position: absolute;
+        }
+
+        /* Timer Ring Styling */
+        .timer-circle {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Printable Certificate Layout Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableCertificateContainer, #printableCertificateContainer * {
+                visibility: visible;
+            }
+            #printableCertificateContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .cert-border {
+            border: 12px double #b45309;
+            background: #fffdfa;
+            color: #1e293b;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030511;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e3a8a;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between relative overflow-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full bg-slate-950/90 border-b border-blue-900/50 p-4 flex justify-between items-center z-20 backdrop-blur-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 border-2 border-amber-400 flex items-center justify-center font-black text-amber-400 text-xl shadow-lg">
+                $
+            </div>
+            <div>
+                <h1 class="text-sm md:text-lg font-bold tracking-wider text-amber-400 uppercase">Who Wants to Be a Millionaire</h1>
+                <p class="text-xs text-blue-300">Ekonomi Kelas 11 - Ketenagakerjaan (Fase F)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Student Tag Badge -->
+            <div id="studentBadge" class="hidden text-right">
+                <span id="badgeName" class="text-xs md:text-sm font-bold text-amber-400 block">Siswa</span>
+                <span id="badgeClass" class="text-[10px] md:text-xs text-blue-300 block">Kelas</span>
+            </div>
+            <button id="soundToggle" onclick="toggleSound()" class="px-3 py-1.5 rounded-lg bg-blue-950 border border-blue-600 text-blue-300 hover:text-white hover:bg-blue-900 text-xs font-semibold transition">
+                <i class="fas fa-volume-up mr-1"></i> Audio: ON
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center p-2 md:p-6 z-10">
+
+        <!-- VIEW 1: IDENTITY INPUT & WELCOME SCREEN -->
+        <section id="welcomeView" class="w-full max-w-xl bg-slate-900/90 border-2 border-blue-600/60 rounded-2xl p-6 md:p-8 text-center backdrop-blur-xl shadow-2xl relative">
+            <div class="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-amber-400 bg-gradient-to-b from-blue-900 to-indigo-950 flex items-center justify-center shadow-[0_0_50px_rgba(251,191,36,0.3)]">
+                <i class="fas fa-graduation-cap text-4xl text-amber-400"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 mb-2">
+                KUIS JADI MILYUNER!
+            </h2>
+            <p class="text-blue-200 text-xs md:text-sm mb-6">
+                Silakan isi identitas Anda untuk mencetak **Sertifikat Pencapaian Resmi** setelah menyelesaikan kuis!
+            </p>
+
+            <!-- Student Form -->
+            <form onsubmit="handleStartGame(event)" class="space-y-4 text-left mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-amber-400 mb-1 uppercase tracking-wider">Nama Lengkap Siswa *</label>
+                    <input type="text" id="inputName" required placeholder="Contoh: Budi Pratama" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-blue-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-amber-400 mb-1 uppercase tracking-wider">Kelas / Rombel *</label>
+                    <input type="text" id="inputClass" required placeholder="Contoh: XI-F1 / XI IPS 1" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-blue-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition">
+                </div>
+
+                <div class="bg-slate-950/80 border border-blue-900/50 rounded-xl p-3 text-xs text-slate-300 space-y-1">
+                    <div class="text-amber-400 font-bold mb-1"><i class="fas fa-clock mr-1"></i> Ketentuan Permainan:</div>
+                    <p>• 15 Soal bertingkat dengan batas waktu <strong>30 Detik per soal</strong>.</p>
+                    <p>• Titik Aman 1: <strong>Rp 1.000.000</strong> | Titik Aman 2: <strong>Rp 32.000.000</strong></p>
+                    <p>• Didukung 3 Lifeline (50:50, Phone a Friend, Ask Audience).</p>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-black text-base tracking-wider shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-all transform hover:scale-[1.01]">
+                    LANJUT KE BABAK KURSI PANAS <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- VIEW 2: FASTEST FINGER FIRST (BABAK KURSI PANAS) -->
+        <section id="fffView" class="hidden w-full max-w-2xl bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-6 text-center backdrop-blur-xl shadow-2xl">
+            <div class="inline-block px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-xs font-bold mb-3 uppercase tracking-widest">
+                Babak Kursi Panas (Fastest Finger First)
+            </div>
+            <h3 id="fffQuestion" class="text-base md:text-lg font-bold text-white mb-4 leading-relaxed">
+                Urutkan konsep Ketenagakerjaan berikut dari tingkat keterlibatan terendah/tidak bekerja hingga paling produktif bekerja penuh!
+            </h3>
+
+            <!-- Selected sequence display -->
+            <div id="fffSequence" class="min-h-[48px] bg-slate-950/80 border border-blue-800 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-amber-400">
+                <span class="text-slate-500 font-normal italic">Klik opsi di bawah untuk mengurutkan (1 - 4)...</span>
+            </div>
+
+            <!-- FFF Options -->
+            <div id="fffOptions" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div class="flex justify-between space-x-3">
+                <button onclick="resetFFF()" class="w-1/3 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:bg-slate-700 font-bold text-xs">
+                    <i class="fas fa-undo mr-1"></i> Reset
+                </button>
+                <button onclick="checkFFF()" class="w-2/3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg">
+                    Submit Urutan <i class="fas fa-check-circle ml-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 3: MAIN GAMEPLAY SCREEN -->
+        <section id="gameView" class="hidden w-full max-w-6xl grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            
+            <!-- Left 3 Columns: Lifelines, Timer & Questions Arena -->
+            <div class="lg:col-span-3 flex flex-col justify-between space-y-4">
+                
+                <!-- Top Control Bar: Lifelines, Circular Timer & Money Target -->
+                <div class="bg-slate-900/80 border border-blue-900/80 rounded-2xl p-3 md:p-4 flex justify-between items-center shadow-lg">
+                    <!-- Lifelines -->
+                    <div class="flex space-x-2 md:space-x-3">
+                        <button id="life5050" onclick="use5050()" class="lifeline-btn group" title="Bantuan 50:50">
+                            <span class="text-xs font-black text-blue-300 group-hover:text-amber-400">50:50</span>
+                        </button>
+                        <button id="lifePhone" onclick="usePhone()" class="lifeline-btn group" title="Phone a Friend">
+                            <i class="fas fa-phone text-blue-300 group-hover:text-amber-400 text-sm"></i>
+                        </button>
+                        <button id="lifeAudience" onclick="useAudience()" class="lifeline-btn group" title="Ask the Audience">
+                            <i class="fas fa-users text-blue-300 group-hover:text-amber-400 text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- 30 Seconds Circular Countdown Timer -->
+                    <div class="relative w-16 h-16 flex items-center justify-center">
+                        <svg class="w-16 h-16">
+                            <circle cx="32" cy="32" r="26" stroke="#1e293b" stroke-width="5" fill="none" />
+                            <circle id="timerProgress" class="timer-circle" cx="32" cy="32" r="26" stroke="#fbbf24" stroke-width="5" fill="none" stroke-dasharray="163.36" stroke-dashoffset="0" stroke-linecap="round" />
+                        </svg>
+                        <span id="timerText" class="absolute font-mono font-black text-lg text-amber-400">30</span>
+                    </div>
+
+                    <!-- Current Target Money -->
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Target Hadiah:</span>
+                        <span id="currentTargetMoney" class="text-base md:text-xl font-black text-amber-400 tracking-wide font-mono">
+                            Rp 500.000
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Question Box (Millionaire Design) -->
+                <div class="relative py-2">
+                    <div class="connector-line w-full absolute top-1/2 -z-10"></div>
+                    <div class="millionaire-box w-full p-5 md:p-7 text-center min-h-[110px] flex items-center justify-center">
+                        <p id="questionText" class="text-sm md:text-lg font-bold leading-relaxed text-white drop-shadow">
+                            Loading pertanyaan...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Options Grid (A, B, C, D) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 relative">
+                    <div onclick="selectOption('A')" id="btnOptA" class="millionaire-box p-3.5 flex items-center space-x-3 group">
+                        <span class="text-amber-400 font-black text-base font-mono">A:</span>
+                        <span id="textOptA" class="text-xs md:text-sm font-semibold text-slate-100 flex-1">Option A</span>
+                    </div>
+
+                    <div onclick="selectOption('B')" id="btnOptB" class="millionaire-box p-3.5 flex items-center space-x-3 group">
+                        <span class="text-amber-400 font-black text-base font-mono">B:</span>
+                        <span id="textOptB" class="text-xs md:text-sm font-semibold text-slate-100 flex-1">Option B</span>
+                    </div>
+
+                    <div onclick="selectOption('C')" id="btnOptC" class="millionaire-box p-3.5 flex items-center space-x-3 group">
+                        <span class="text-amber-400 font-black text-base font-mono">C:</span>
+                        <span id="textOptC" class="text-xs md:text-sm font-semibold text-slate-100 flex-1">Option C</span>
+                    </div>
+
+                    <div onclick="selectOption('D')" id="btnOptD" class="millionaire-box p-3.5 flex items-center space-x-3 group">
+                        <span class="text-amber-400 font-black text-base font-mono">D:</span>
+                        <span id="textOptD" class="text-xs md:text-sm font-semibold text-slate-100 flex-1">Option D</span>
+                    </div>
+                </div>
+
+                <!-- Walk Away / Quit Button -->
+                <div class="flex justify-end">
+                    <button onclick="walkAway()" class="px-4 py-2 rounded-xl bg-slate-900 border border-red-500/40 text-red-400 hover:bg-red-950/50 hover:border-red-500 text-xs font-bold transition flex items-center space-x-2">
+                        <i class="fas fa-door-open"></i>
+                        <span>Berhenti & Bawa Pulang Hadiah</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right 1 Column: Money Ladder Sidebar -->
+            <div class="bg-slate-950/90 border border-blue-900/60 rounded-2xl p-4 shadow-xl">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-2 border-b border-slate-800 pb-2">
+                    Tangga Hadiah
+                </h3>
+                <div id="moneyLadder" class="flex flex-col-reverse space-y-reverse space-y-1 text-xs font-mono">
+                    <!-- Dynamically populated ladder -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- VIEW 4: MODALS (Audience, Phone, Certificate) -->
+        <div id="modalOverlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
+            
+            <!-- Lifeline: Ask Audience Modal -->
+            <div id="modalAudience" class="w-full max-w-md bg-slate-900 border-2 border-blue-500 rounded-2xl p-6 hidden my-auto">
+                <h3 class="text-base font-bold text-amber-400 mb-1 flex items-center">
+                    <i class="fas fa-chart-bar mr-2"></i> Hasil Voting Penonton Studio
+                </h3>
+                <p class="text-xs text-slate-300 mb-4">Persentase jawaban 100 penonton di studio:</p>
+                <div class="space-y-3 font-mono text-xs">
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1"><span>A:</span><span id="countA">0%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="barA" class="bg-blue-500 h-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1"><span>B:</span><span id="countB">0%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="barB" class="bg-blue-500 h-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1"><span>C:</span><span id="countC">0%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="barC" class="bg-blue-500 h-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1"><span>D:</span><span id="countD">0%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="barD" class="bg-blue-500 h-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-full mt-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                    Tutup
+                </button>
+            </div>
+
+            <!-- Lifeline: Phone a Friend Modal -->
+            <div id="modalPhone" class="w-full max-w-md bg-slate-900 border-2 border-blue-500 rounded-2xl p-6 hidden my-auto">
+                <div class="flex items-center space-x-3 mb-3 border-b border-slate-800 pb-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white text-lg">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-xs">Dr. Budi (Pakar Ekonomi Ketenagakerjaan)</h4>
+                        <p class="text-[10px] text-emerald-400"><i class="fas fa-phone-alt mr-1"></i> Terhubung (Pernyataan Teman)</p>
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-blue-900/50 text-slate-200 text-xs italic mb-5 leading-relaxed">
+                    <p id="phoneSpeech">"Halo! Berdasarkan analisis materi Ekonomi Ketenagakerjaan..."</p>
+                </div>
+                <button onclick="closeModal()" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                    Terima Kasih!
+                </button>
+            </div>
+
+            <!-- DIGITAL CERTIFICATE MODAL -->
+            <div id="modalCertificate" class="w-full max-w-4xl hidden my-auto">
+                <div class="no-print flex justify-between items-center mb-3">
+                    <span class="text-xs text-amber-400 font-bold uppercase tracking-wider"><i class="fas fa-award mr-1"></i> Sertifikat Pencapaian Resmi Siswa</span>
+                    <div class="flex space-x-2">
+                        <button onclick="window.print()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition">
+                            <i class="fas fa-print mr-1"></i> Cetak / Unduh PDF
+                        </button>
+                        <button onclick="restartGame()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+                            <i class="fas fa-redo mr-1"></i> Main Lagi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Certificate Container -->
+                <div id="printableCertificateContainer" class="cert-border p-6 md:p-10 rounded-xl text-center relative overflow-hidden bg-amber-50/10">
+                    <!-- Ornamental Corners -->
+                    <div class="absolute top-3 left-3 text-amber-700 text-2xl"><i class="fas fa-certificate"></i></div>
+                    <div class="absolute top-3 right-3 text-amber-700 text-2xl"><i class="fas fa-certificate"></i></div>
+                    <div class="absolute bottom-3 left-3 text-amber-700 text-2xl"><i class="fas fa-certificate"></i></div>
+                    <div class="absolute bottom-3 right-3 text-amber-700 text-2xl"><i class="fas fa-certificate"></i></div>
+
+                    <div class="border-2 border-amber-600/40 p-6 md:p-8 rounded-lg bg-white/95 text-slate-900">
+                        <div class="w-16 h-16 mx-auto mb-2 text-amber-600 text-4xl">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-4xl font-bold tracking-widest text-amber-900 uppercase font-serif mb-1" style="font-family: 'Cinzel', serif;">
+                            SERTIFIKAT PENGHARGAAN
+                        </h2>
+                        <p class="text-xs md:text-sm text-slate-600 font-semibold uppercase tracking-wider mb-6">
+                            Certificate of Educational Achievement - Ekonomi Fase F
+                        </p>
+
+                        <p class="text-xs md:text-sm text-slate-600 italic">Diberikan secara resmi kepada siswa:</p>
+                        
+                        <!-- Student Name -->
+                        <h3 id="certStudentName" class="text-2xl md:text-4xl font-bold text-blue-950 my-2 font-serif border-b-2 border-amber-500 inline-block px-8 pb-1" style="font-family: 'Great Vibes', cursive, serif;">
+                            Nama Siswa
+                        </h3>
+                        
+                        <p id="certStudentClass" class="text-xs md:text-sm font-bold text-slate-700 mb-4">
+                            Kelas: XI-Fase F
+                        </p>
+
+                        <p class="text-xs md:text-sm text-slate-700 max-w-2xl mx-auto leading-relaxed mb-6">
+                            Atas keberhasilan dan pencapaian luar biasa dalam menyelesaikan evaluasi pembelajaran interaktif 
+                            <strong>Kuis Who Wants to Be a Millionaire Materi Ekonomi Ketenagakerjaan</strong> dengan raihan hadiah virtual sebesar:
+                        </p>
+
+                        <!-- Final Earned Cash Amount -->
+                        <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white text-2xl md:text-4xl font-black font-mono py-3 px-6 rounded-xl shadow-md inline-block my-1 border-2 border-amber-300">
+                            <span id="certPrizeAmount">Rp 1.000.000.000</span>
+                        </div>
+
+                        <p id="certStageText" class="text-xs font-semibold text-slate-500 mt-2 mb-8">
+                            (Pencapaian: Pertanyaan Ke-15 dari 15)
+                        </p>
+
+                        <!-- Signatures & Footer -->
+                        <div class="grid grid-cols-2 gap-8 pt-6 border-t border-slate-200 text-xs">
+                            <div>
+                                <p class="text-slate-500 mb-1">Tanggal Evaluasi:</p>
+                                <p id="certDate" class="font-bold text-slate-800">30 September 2026</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-500 mb-1">Panitia / Guru Pengampu Ekonomi:</p>
+                                <p class="font-bold text-slate-800 uppercase underline decoration-amber-500 decoration-2">Tim Ekonomi Fase F SMA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full bg-slate-950 border-t border-slate-900 p-2.5 text-center text-[10px] text-slate-500 z-10">
+        Media Pembelajaran Interaktif Ekonomi SMA Kelas 11 Fase F - Ketenagakerjaan &copy; 2026
+    </footer>
+
+    <script>
+        /* -------------------------------------------------------------------------- */
+        /* 1. AUDIO SYNTHESIZER (Web Audio API)                                      */
+        /* -------------------------------------------------------------------------- */
+        let audioCtx = null;
+        let isSoundOn = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            const btn = document.getElementById('soundToggle');
+            btn.innerHTML = isSoundOn ? '<i class="fas fa-volume-up mr-1"></i> Audio: ON' : '<i class="fas fa-volume-mute mr-1"></i> Audio: OFF';
+        }
+
+        function playSound(type) {
+            if (!isSoundOn) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+
+            if (type === 'select') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'tick') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'correct') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + 1.0);
+                });
+            } else if (type === 'wrong') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(70, now + 0.8);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            } else if (type === 'suspense') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(60, now);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                for (let i = 0; i < 6; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400 + i * 150, now + i * 0.1);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.1);
+                    osc.stop(now + 1.5);
+                }
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 2. GAME DATA (MONEY LADDER, FFF & 15 EKONOMI QUESTIONS)                    */
+        /* -------------------------------------------------------------------------- */
+        const MONEY_LADDER = [
+            { level: 1, prize: "Rp 500.000", safe: false },
+            { level: 2, prize: "Rp 1.000.000", safe: true }, // SAFE POINT 1
+            { level: 3, prize: "Rp 2.000.000", safe: false },
+            { level: 4, prize: "Rp 4.000.000", safe: false },
+            { level: 5, prize: "Rp 8.000.000", safe: false },
+            { level: 6, prize: "Rp 16.000.000", safe: false },
+            { level: 7, prize: "Rp 32.000.000", safe: true }, // SAFE POINT 2
+            { level: 8, prize: "Rp 64.000.000", safe: false },
+            { level: 9, prize: "Rp 125.000.000", safe: false },
+            { level: 10, prize: "Rp 250.000.000", safe: false },
+            { level: 11, prize: "Rp 500.000.000", safe: false },
+            { level: 12, prize: "Rp 650.000.000", safe: false },
+            { level: 13, prize: "Rp 750.000.000", safe: false },
+            { level: 14, prize: "Rp 850.000.000", safe: false },
+            { level: 15, prize: "Rp 1.000.000.000", safe: true } // GRAND PRIZE
+        ];
+
+        const FASTEST_FINGER_DATA = {
+            question: "Urutkan status ketenagakerjaan berikut dari tingkat keterlibatan terendah/tidak bekerja hingga paling produktif bekerja penuh!",
+            options: [
+                { id: 'A', text: "Pengangguran Terbuka" },
+                { id: 'B', text: "Setengah Pengangguran" },
+                { id: 'C', text: "Pekerja Paruh Waktu" },
+                { id: 'D', text: "Pekerja Penuh (Full-time)" }
+            ],
+            correctOrder: ['A', 'B', 'C', 'D']
+        };
+
+        const QUESTIONS = [
+            // Level 1 - Rp 500.000
+            {
+                q: "Seluruh penduduk yang berada dalam batas usia kerja (di Indonesia berusia 15 tahun ke atas) yang berpotensi memproduksi barang/jasa disebut...",
+                options: { A: "Tenaga Kerja", B: "Angkatan Kerja", C: "Bukan Angkatan Kerja", D: "Pengangguran" },
+                correct: "A",
+                exp: "Tenaga kerja (manpower) adalah seluruh penduduk usia 15 tahun ke atas yang berpotensi menghasilkan barang dan jasa."
+            },
+            // Level 2 - Rp 1.000.000 (SAFE POINT 1)
+            {
+                q: "Kelompok penduduk usia kerja yang aktif bekerja atau sedang mencari pekerjaan (pengangguran) digolongkan dalam...",
+                options: { A: "Bukan Angkatan Kerja", B: "Angkatan Kerja", C: "Pekerja Paruh Waktu", D: "Tenaga Kerja Terdidik" },
+                correct: "B",
+                exp: "Angkatan kerja (labor force) adalah penduduk usia kerja yang aktif secara ekonomi, yaitu yang sedang bekerja atau mencari pekerjaan."
+            },
+            // Level 3 - Rp 2.000.000
+            {
+                q: "Indikator ketenagakerjaan yang mengukur persentase jumlah pengangguran terhadap total jumlah angkatan kerja dinamakan...",
+                options: { A: "TPAK (Tingkat Partisipasi Angkatan Kerja)", B: "TPT (Tingkat Pengangguran Terbuka)", C: "Rasio Ketergantungan", D: "Indeks Pembangunan Manusia" },
+                correct: "B",
+                exp: "TPT dihitung dengan rumus: (Jumlah Pengangguran Terbuka / Jumlah Angkatan Kerja) × 100%."
+            },
+            // Level 4 - Rp 4.000.000
+            {
+                q: "Pengangguran yang timbul akibat pencari kerja membutuhkan waktu untuk mencari lowongan yang sesuai dengan keahlian dinamakan...",
+                options: { A: "Pengangguran Friksional", B: "Pengangguran Struktural", C: "Pengangguran Siklis", D: "Pengangguran Musiman" },
+                correct: "A",
+                exp: "Pengangguran friksional terjadi akibat hambatan waktu, jarak, atau pencarian informasi lowongan kerja yang lebih cocok."
+            },
+            // Level 5 - Rp 8.000.000
+            {
+                q: "Pengangguran yang timbul akibat perubahan struktur perekonomian, misalnya peralihan dari agraris ke industri digital, disebut...",
+                options: { A: "Pengangguran Friksional", B: "Pengangguran Musiman", C: "Pengangguran Struktural", D: "Pengangguran Terselubung" },
+                correct: "C",
+                exp: "Pengangguran struktural terjadi ketika keterampilan tenaga kerja tidak sesuai lagi dengan perkembangan struktur ekonomi baru."
+            },
+            // Level 6 - Rp 16.000.000
+            {
+                q: "Pengangguran yang disebabkan oleh penurunan gelombang kegiatan ekonomi (krisis resesi/konjungtur) sehingga pemutusan hubungan kerja (PHK) meningkat dinamakan...",
+                options: { A: "Pengangguran Siklis / Konjungtur", B: "Pengangguran Teknologi", C: "Pengangguran Volunter", D: "Pengangguran Friksional" },
+                correct: "A",
+                exp: "Pengangguran siklis (cyclical unemployment) terjadi saat perekonomian mengalami resesi dan daya beli masyarakat menurun drastis."
+            },
+            // Level 7 - Rp 32.000.000 (SAFE POINT 2)
+            {
+                q: "Suatu kondisi di mana jumlah tenaga kerja di tempat kerja melebihi kapasitas optimal sehingga produktivitas marjinalnya nol/sangat rendah dinamakan...",
+                options: { A: "Setengah Pengangguran", B: "Pengangguran Terselubung (Disguised Unemployment)", C: "Pengangguran Terbuka", D: "Pekerja Paruh Waktu" },
+                correct: "B",
+                exp: "Pengangguran terselubung terjadi saat kelebihan tenaga kerja bekerja pada suatu unit usaha tanpa menambah output berarti."
+            },
+            // Level 8 - Rp 64.000.000
+            {
+                q: "Kebijakan penetapan Upah Minimum Provinsi (UMP) yang difasilitasi Dewan Pengupahan terutama bertujuan untuk...",
+                options: { A: "Menghapuskan pajak perusahaan", B: "Jaminan perlindungan jaring pengaman agar pekerja hidup layak", C: "Menyeragamkan seluruh gaji pengusaha", D: "Menurunkan tingkat inflasi nasional" },
+                correct: "B",
+                exp: "UMP berfungsi sebagai jaring pengaman sosial (safety net) agar pekerja tingkat bawah terhindar dari upah di bawah standar hidup layak."
+            },
+            // Level 9 - Rp 125.000.000
+            {
+                q: "Sistem pembayaran upah yang dihitung berdasarkan jumlah fisik barang atau unit produk yang berhasil diselesaikan pekerja dinamakan...",
+                options: { A: "Upah Waktu", B: "Upah Satuan Hasil / Borongan", C: "Upah Indeks", D: "Upah Partisipasi" },
+                correct: "B",
+                exp: "Sistem upah satuan hasil (piece-rate) menetapkan besaran imbalan secara proporsional dengan banyaknya output yang dihasilkan."
+            },
+            // Level 10 - Rp 250.000.000
+            {
+                q: "Perjanjian kerja antara pekerja dan pengusaha untuk mengadakan hubungan kerja yang bersifat tidak tetap atau terbatas jangka waktunya dinamakan...",
+                options: { A: "PKWT (Perjanjian Kerja Waktu Tertentu)", B: "PKWTT (Perjanjian Kerja Waktu Tidak Tertentu)", C: "MOU Permanen", D: "Surat Keputusan Pegawai Tetap" },
+                correct: "A",
+                exp: "PKWT mengatur hubungan kerja kontrak berjangka waktu tertentu atau berdasarkan selesainya suatu pekerjaan tertentu."
+            },
+            // Level 11 - Rp 500.000.000
+            {
+                q: "Salah satu dampak makroekonomi secara langsung dari meningkatnya pengangguran terbuka dalam suatu negara adalah...",
+                options: { A: "Peningkatan pendapatan per kapita", B: "Penurunan Produk Domestik Bruto (PDB) dan penerimaan pajak negara", C: "Kenaikan ekspor secara signifikan", D: "Penurunan beban belanja sosial pemerintah" },
+                correct: "B",
+                exp: "Pengangguran tinggi mengurangi kapasitas produksi nasional (PDB) serta menurunkan penerimaan negara dari pajak pendapatan (PPh)."
+            },
+            // Level 12 - Rp 650.000.000
+            {
+                q: "Program strategis pemerintah Indonesia dalam memfasilitasi pelatihan vokasi dan pemberian beasiswa skilling/upskilling bagi pencari kerja dinamakan...",
+                options: { A: "Program Kartu Prakerja", B: "Bantuan Operasional Sekolah", C: "Kredit Usaha Rakyat", D: "Subsidi Gaji Pekerja" },
+                correct: "A",
+                exp: "Program Kartu Prakerja dirancang untuk meningkatkan kompetensi, produktivitas, dan daya saing angkatan kerja Indonesia."
+            },
+            // Level 13 - Rp 750.000.000
+            {
+                q: "Tingkat Ketergantungan (Dependency Ratio) yang tinggi akibat banyaknya pengangguran pada usia produktif mengindikasikan bahwa...",
+                options: { A: "Setiap penduduk produktif menanggung beban hidup semakin banyak penduduk non-produktif", B: "Perekonomian siap menikmati Bonus Demografi optimal", C: "Pendapatan nasional terbagi secara merata", D: "Tingkat tabungan masyarakat melonjak tinggi" },
+                correct: "A",
+                exp: "Dependency ratio tinggi menandakan beban penderitaan ekonomi bertumpu pada segelintir penduduk yang memiliki pekerjaan aktif."
+            },
+            // Level 14 - Rp 850.000.000
+            {
+                q: "Lembaga vokasi non-formal milik pemerintah di bawah Kemnaker yang bertugas meningkatkan keterampilan teknis angkatan kerja dinamakan...",
+                options: { A: "BLK (Balai Latihan Kerja)", B: "BPS (Badan Pusat Statistik)", C: "Kadin (Kamar Dagang Indonesia)", D: "BPJS Ketenagakerjaan" },
+                correct: "A",
+                exp: "BLK menyelenggarakan pelatihan berbasis kompetensi guna menyiapkan tenaga kerja siap pakai sesuai tuntutan pasar industri."
+            },
+            // Level 15 - Rp 1.000.000.000 (GRAND PRIZE)
+            {
+                q: "Rumus perhitungan Tingkat Partisipasi Angkatan Kerja (TPAK) yang menjadi tolok ukur partisipasi ekonomi penduduk usia kerja adalah...",
+                options: {
+                    A: "(Jumlah Angkatan Kerja / Jumlah Penduduk Usia Kerja) × 100%",
+                    B: "(Jumlah Pengangguran / Jumlah Angkatan Kerja) × 100%",
+                    C: "(Jumlah Pekerja Penuh / Penduduk Total) × 100%",
+                    D: "(Jumlah Penduduk Usia Kerja / Angkatan Kerja) × 100%"
+                },
+                correct: "A",
+                exp: "TPAK dihitung melalui rasio perbandingan antara Jumlah Angkatan Kerja dengan Total Penduduk Usia Kerja (15+) dikali 100%."
+            }
+        ];
+
+        /* -------------------------------------------------------------------------- */
+        /* 3. GAME STATE & TIMER VARIABLES                                            */
+        /* -------------------------------------------------------------------------- */
+        let studentName = "";
+        let studentClass = "";
+        let currentLevel = 0; 
+        let selectedOptionKey = null;
+        let lifelinesUsed = { '5050': false, 'phone': false, 'audience': false };
+        let fffUserSequence = [];
+        let isAnsweringLocked = false;
+
+        // 30 Seconds Timer Variables
+        let timerInterval = null;
+        let timeLeft = 30;
+        const TOTAL_TIME = 30;
+
+        /* -------------------------------------------------------------------------- */
+        /* 4. INITIALIZATION                                                          */
+        /* -------------------------------------------------------------------------- */
+        window.onload = function() {
+            renderLadder();
+        };
+
+        function renderLadder() {
+            const ladderEl = document.getElementById('moneyLadder');
+            ladderEl.innerHTML = '';
+
+            MONEY_LADDER.forEach(item => {
+                const div = document.createElement('div');
+                let safeClass = item.safe ? 'safe' : 'text-slate-400';
+                div.id = `ladderItem-${item.level}`;
+                div.className = `ladder-item flex justify-between px-3 py-0.5 text-xs ${safeClass}`;
+                div.innerHTML = `
+                    <span>${item.level}.</span>
+                    <span>${item.prize}</span>
+                `;
+                ladderEl.appendChild(div);
+            });
+        }
+
+        function updateLadderUI() {
+            MONEY_LADDER.forEach(item => {
+                const el = document.getElementById(`ladderItem-${item.level}`);
+                el.classList.remove('active', 'passed');
+
+                if (item.level - 1 === currentLevel) {
+                    el.classList.add('active');
+                } else if (item.level - 1 < currentLevel) {
+                    el.classList.add('passed');
+                }
+            });
+
+            document.getElementById('currentTargetMoney').innerText = MONEY_LADDER[currentLevel].prize;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 5. STUDENT IDENTITY & FFF START                                            */
+        /* -------------------------------------------------------------------------- */
+        function handleStartGame(e) {
+            e.preventDefault();
+            studentName = document.getElementById('inputName').value.trim();
+            studentClass = document.getElementById('inputClass').value.trim();
+
+            if (!studentName || !studentClass) return;
+
+            // Update Badge Header
+            document.getElementById('badgeName').innerText = studentName;
+            document.getElementById('badgeClass').innerText = studentClass;
+            document.getElementById('studentBadge').classList.remove('hidden');
+
+            startFastestFinger();
+        }
+
+        function startFastestFinger() {
+            playSound('select');
+            document.getElementById('welcomeView').classList.add('hidden');
+            document.getElementById('fffView').classList.remove('hidden');
+
+            document.getElementById('fffQuestion').innerText = FASTEST_FINGER_DATA.question;
+            resetFFF();
+        }
+
+        function renderFFFOptions() {
+            const container = document.getElementById('fffOptions');
+            container.innerHTML = '';
+
+            FASTEST_FINGER_DATA.options.forEach(opt => {
+                const isSelected = fffUserSequence.includes(opt.id);
+                const btn = document.createElement('button');
+                btn.className = `millionaire-box p-3 text-left flex items-center space-x-3 ${isSelected ? 'disabled' : ''}`;
+                btn.onclick = () => selectFFFOption(opt.id);
+                btn.innerHTML = `
+                    <span class="text-amber-400 font-bold font-mono text-xs">${opt.id}:</span>
+                    <span class="text-xs font-semibold text-white">${opt.text}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function selectFFFOption(id) {
+            if (fffUserSequence.includes(id) || fffUserSequence.length >= 4) return;
+            playSound('select');
+            fffUserSequence.push(id);
+            updateFFFSequenceUI();
+            renderFFFOptions();
+        }
+
+        function updateFFFSequenceUI() {
+            const seqEl = document.getElementById('fffSequence');
+            if (fffUserSequence.length === 0) {
+                seqEl.innerHTML = `<span class="text-slate-500 font-normal italic">Klik opsi di bawah untuk mengurutkan (1 - 4)...</span>`;
+                return;
+            }
+
+            seqEl.innerHTML = fffUserSequence.map((id, index) => {
+                const item = FASTEST_FINGER_DATA.options.find(o => o.id === id);
+                return `<span class="bg-blue-900 border border-blue-500 px-2 py-1 rounded-lg text-xs">${index + 1}. [${id}] ${item.text}</span>`;
+            }).join(' ');
+        }
+
+        function resetFFF() {
+            fffUserSequence = [];
+            updateFFFSequenceUI();
+            renderFFFOptions();
+        }
+
+        function checkFFF() {
+            if (fffUserSequence.length < 4) {
+                alert("Silakan urutkan keempat opsi terlebih dahulu!");
+                return;
+            }
+
+            const isCorrect = fffUserSequence.every((val, index) => val === FASTEST_FINGER_DATA.correctOrder[index]);
+
+            if (isCorrect) {
+                playSound('correct');
+                alert("Luar biasa! Urutan Anda tepat. Anda berhak duduk di Kursi Panas!");
+                document.getElementById('fffView').classList.add('hidden');
+                document.getElementById('gameView').classList.remove('hidden');
+                initGame();
+            } else {
+                playSound('wrong');
+                alert("Urutan masih belum tepat! Silakan coba lagi.");
+                resetFFF();
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 6. MAIN GAMEPLAY & TIMER LOGIC                                             */
+        /* -------------------------------------------------------------------------- */
+        function initGame() {
+            currentLevel = 0;
+            lifelinesUsed = { '5050': false, 'phone': false, 'audience': false };
+            
+            document.getElementById('life5050').classList.remove('used');
+            document.getElementById('lifePhone').classList.remove('used');
+            document.getElementById('lifeAudience').classList.remove('used');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnsweringLocked = false;
+            selectedOptionKey = null;
+
+            updateLadderUI();
+            playSound('suspense');
+
+            const qData = QUESTIONS[currentLevel];
+            document.getElementById('questionText').innerText = `${currentLevel + 1}. ${qData.q}`;
+
+            const keys = ['A', 'B', 'C', 'D'];
+            keys.forEach(k => {
+                const btn = document.getElementById(`btnOpt${k}`);
+                const txt = document.getElementById(`textOpt${k}`);
+                btn.className = "millionaire-box p-3.5 flex items-center space-x-3 group";
+                txt.innerText = qData.options[k];
+            });
+
+            start30SecTimer();
+        }
+
+        function start30SecTimer() {
+            clearInterval(timerInterval);
+            timeLeft = TOTAL_TIME;
+            updateTimerCircleUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerCircleUI();
+
+                if (timeLeft <= 5 && timeLeft > 0) {
+                    playSound('tick');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerCircleUI() {
+            const timerText = document.getElementById('timerText');
+            const circle = document.getElementById('timerProgress');
+            
+            timerText.innerText = timeLeft;
+
+            // Stroke dasharray = 2 * PI * r = 2 * 3.14159 * 26 ≈ 163.36
+            const fullDash = 163.36;
+            const offset = fullDash - (timeLeft / TOTAL_TIME) * fullDash;
+            circle.style.strokeDashoffset = offset;
+
+            if (timeLeft <= 8) {
+                circle.setAttribute('stroke', '#ef4444');
+                timerText.classList.remove('text-amber-400');
+                timerText.classList.add('text-red-500');
+            } else {
+                circle.setAttribute('stroke', '#fbbf24');
+                timerText.classList.remove('text-red-500');
+                timerText.classList.add('text-amber-400');
+            }
+        }
+
+        function handleTimeOut() {
+            isAnsweringLocked = true;
+            playSound('wrong');
+
+            // Highlight correct answer
+            const qData = QUESTIONS[currentLevel];
+            document.getElementById(`btnOpt${qData.correct}`).classList.add('correct');
+
+            setTimeout(() => {
+                alert(`WAKTU 30 DETIK HABIS!\nJawaban yang benar adalah [ ${qData.correct} ]. Permainan berakhir.`);
+                endGame('timeout');
+            }, 1500);
+        }
+
+        function selectOption(key) {
+            if (isAnsweringLocked) return;
+
+            const btn = document.getElementById(`btnOpt${key}`);
+            if (btn.classList.contains('disabled')) return;
+
+            clearInterval(timerInterval);
+            isAnsweringLocked = true;
+            selectedOptionKey = key;
+            playSound('select');
+
+            btn.classList.add('selected');
+
+            setTimeout(() => {
+                revealAnswer();
+            }, 2000);
+        }
+
+        function revealAnswer() {
+            const qData = QUESTIONS[currentLevel];
+            const correctKey = qData.correct;
+            const selectedBtn = document.getElementById(`btnOpt${selectedOptionKey}`);
+            const correctBtn = document.getElementById(`btnOpt${correctKey}`);
+
+            selectedBtn.classList.remove('selected');
+
+            if (selectedOptionKey === correctKey) {
+                playSound('correct');
+                correctBtn.classList.add('correct');
+
+                setTimeout(() => {
+                    if (currentLevel === 14) {
+                        endGame('win');
+                    } else {
+                        currentLevel++;
+                        loadQuestion();
+                    }
+                }, 2200);
+
+            } else {
+                playSound('wrong');
+                selectedBtn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+
+                setTimeout(() => {
+                    endGame('loss');
+                }, 2500);
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 7. LIFELINES IMPLEMENTATION                                                */
+        /* -------------------------------------------------------------------------- */
+        function use5050() {
+            if (lifelinesUsed['5050'] || isAnsweringLocked) return;
+            playSound('select');
+            lifelinesUsed['5050'] = true;
+            document.getElementById('life5050').classList.add('used');
+
+            const correctKey = QUESTIONS[currentLevel].correct;
+            const wrongKeys = ['A', 'B', 'C', 'D'].filter(k => k !== correctKey);
+            
+            const shuffled = wrongKeys.sort(() => 0.5 - Math.random());
+            const keysToRemove = shuffled.slice(0, 2);
+
+            keysToRemove.forEach(k => {
+                document.getElementById(`btnOpt${k}`).classList.add('disabled');
+            });
+        }
+
+        function usePhone() {
+            if (lifelinesUsed['phone'] || isAnsweringLocked) return;
+            playSound('select');
+            lifelinesUsed['phone'] = true;
+            document.getElementById('lifePhone').classList.add('used');
+
+            const correctKey = QUESTIONS[currentLevel].correct;
+            const text = QUESTIONS[currentLevel].options[correctKey];
+
+            document.getElementById('phoneSpeech').innerText = 
+                `"Halo ${studentName}! Berdasarkan analisis teori Ekonomi Ketenagakerjaan, saya yakin 85% jawaban yang paling tepat adalah [ ${correctKey} ]: ${text}."`;
+
+            openModal('modalPhone');
+        }
+
+        function useAudience() {
+            if (lifelinesUsed['audience'] || isAnsweringLocked) return;
+            playSound('select');
+            lifelinesUsed['audience'] = true;
+            document.getElementById('lifeAudience').classList.add('used');
+
+            const correctKey = QUESTIONS[currentLevel].correct;
+            let percentages = { A: 10, B: 10, C: 10, D: 10 };
+
+            const mainShare = Math.floor(Math.random() * 20) + 65;
+            percentages[correctKey] = mainShare;
+
+            let remaining = 100 - mainShare;
+            const otherKeys = ['A', 'B', 'C', 'D'].filter(k => k !== correctKey);
+
+            otherKeys.forEach((k, idx) => {
+                if (idx === otherKeys.length - 1) {
+                    percentages[k] = remaining;
+                } else {
+                    const share = Math.floor(Math.random() * remaining);
+                    percentages[k] = share;
+                    remaining -= share;
+                }
+            });
+
+            ['A', 'B', 'C', 'D'].forEach(k => {
+                document.getElementById(`count${k}`).innerText = `${percentages[k]}%`;
+                document.getElementById(`bar${k}`).style.width = `${percentages[k]}%`;
+            });
+
+            openModal('modalAudience');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 8. MODAL CONTROLS & WALKAWAY                                               */
+        /* -------------------------------------------------------------------------- */
+        function openModal(modalId) {
+            document.getElementById('modalOverlay').classList.remove('hidden');
+            document.getElementById('modalAudience').classList.add('hidden');
+            document.getElementById('modalPhone').classList.add('hidden');
+            document.getElementById('modalCertificate').classList.add('hidden');
+
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.add('hidden');
+        }
+
+        function walkAway() {
+            if (isAnsweringLocked) return;
+            if (confirm("Apakah Anda yakin ingin berhenti dan membawa pulang hadiah saat ini?")) {
+                clearInterval(timerInterval);
+                endGame('walkaway');
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 9. END GAME & DIGITAL CERTIFICATE GENERATION                               */
+        /* -------------------------------------------------------------------------- */
+        function endGame(status) {
+            clearInterval(timerInterval);
+            let finalPrizeText = "Rp 0";
+
+            if (status === 'win') {
+                playSound('win');
+                finalPrizeText = "Rp 1.000.000.000";
+            } else if (status === 'walkaway') {
+                playSound('win');
+                finalPrizeText = currentLevel === 0 ? "Rp 0" : MONEY_LADDER[currentLevel - 1].prize;
+            } else { // loss or timeout
+                if (currentLevel >= 6) {
+                    finalPrizeText = "Rp 32.000.000"; // Safe point 2
+                } else if (currentLevel >= 1) {
+                    finalPrizeText = "Rp 1.000.000"; // Safe point 1
+                } else {
+                    finalPrizeText = "Rp 0";
+                }
+            }
+
+            // Populate Printable Certificate
+            document.getElementById('certStudentName').innerText = studentName || "Siswa Teladan";
+            document.getElementById('certStudentClass').innerText = `Kelas: ${studentClass || 'XI-Fase F'}`;
+            document.getElementById('certPrizeAmount').innerText = finalPrizeText;
+            document.getElementById('certStageText').innerText = `(Pencapaian: Pertanyaan Ke-${currentLevel + 1} dari 15 Soal)`;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'Long', year: 'numeric' });
+            document.getElementById('certDate').innerText = dateStr;
+
+            openModal('modalCertificate');
+        }
+
+        function restartGame() {
+            closeModal();
+            document.getElementById('gameView').classList.add('hidden');
+            document.getElementById('welcomeView').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
